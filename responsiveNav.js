@@ -73,7 +73,11 @@
     this.$trigger = isObj(this.trigger) ? this.trigger : $(this.trigger);
 
     // The unordered list in topmost level.
-    this.topLevelNav = this.$navContainer.find('ul').not('.contextual-links').first();
+    if (this.$navContainer.is("ul")) {
+      this.topLevelNav = this.$navContainer;
+    } else {
+      this.topLevelNav = this.$navContainer.find('ul').not('.contextual-links').first();
+    }
 
     // CSS class name of the element that will trigger the toggling of the sub nav.
     this.subNavTriggerClass = options.subNavTriggerClass || 'subnav-trigger';
