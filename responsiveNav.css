@@ -2,6 +2,7 @@
 .responsive-nav ul ul {
 
   max-height: 0;
+  min-height: 0;
   overflow: hidden;
 
   -webkit-transition: 0.3s all;
