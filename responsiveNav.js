@@ -2,215 +2,148 @@
  * Created by tannerlangley on 10/27/14.
  */
 
-;!function ($, e3, window, document, undefined) {
+;!function ($) {
 
   "use strict";
 
-  e3.ResponsiveNav = function(options) {
+  $.fn.responsiveNav = function(options) {
 
-    /**
-     * Element to trigger menu toggle.
-     * @type {string || object}
-     */
-    this.trigger = options.trigger;
-
-    /**
-     * Container for collapsible menu. This should be a wrapper
-     * around an unordered list.
-     * @type {string || object}
-     */
-    this.navContainer = options.navContainer;
-
-    /**
-     * Transition duration
-     * @type {number}
-     */
-    this.transition = options.transition || 250;
-
-    /**
-     * Min-width where the nav should no longer collapse
-     * @type {number}
-     */
-    this.breakpoint = options.breakpoint || 720;
-
-    /**
-     * Is there a sub level navigation?
-     * @type {boolean}
-     */
-    this.hasSubnav = options.hasSubnav || false;
-
-    /**
-     * Decides if the subnav should be expanded by default.
-     */
-    this.subnavExpanded = options.subnavExpanded || false;
-
-    /**
-     * Specifies any additional vertical spacing to add when menu is expanded.
-     */
-    this.verticalPadding = options.verticalPadding || 0;
-
-    /**
-     * Specifies if the window should scroll to the top of the expanded nav.
-     * @type {Window.scrollTo|boolean}
-     */
-    this.scrollTo = options.scrollTo || false;
-
-    this.scrollOffset = options.scrollOffset || 0;
-
-
-    /**
-     * Determines if ResponsiveNav is initialized.
-     * @type {boolean}
-     */
-    this.isIntialized = false;
-
-    this.isMobile = false;
-
-    // Make navContainer a jQuery object if it isn't already.
-    this.$navContainer = isObj(this.navContainer) ? this.navContainer : $(this.navContainer);
+    // Default settings
+    var settings = $.extend({
+      transition: 250,
+      breakpoint: 720,
+      hasSubnav: false,
+      subnavExpanded: false,
+      persistantSub: false,
+      verticalPadding: 0,
+      scrollTo: false,
+      scrollOffset: 0,
+      scrollTarget: null,
+      subNavTriggerClass: 'subnav-trigger'
+    }, options);
+   
+    // Initialize all local variables
+    var base = this,
+        $parent = $(this),
+        isInitialized = false,
+        isMobile = false,
+        $trigger = '',
+        $topLevelNav = '',
+        $subLevelNav = '',
+        $subNavTrigger = '',
+        topLevelNavHeight = '',
+        $scrollTarget = '';
 
     // Make trigger a jQuery object if it isn't already.
-    this.$trigger = isObj(this.trigger) ? this.trigger : $(this.trigger);
+    $trigger = isObj(settings.trigger) ? settings.trigger : $(settings.trigger);
 
     // The unordered list in topmost level.
-    if (this.$navContainer.is("ul")) {
-      this.topLevelNav = this.$navContainer;
+    if ($parent.is("ul")) {
+      $topLevelNav = $parent;
     } else {
-      this.topLevelNav = this.$navContainer.find('ul').not('.contextual-links').first();
+      $topLevelNav = $parent.find('ul').not('.contextual-links').first();
     }
 
-    // CSS class name of the element that will trigger the toggling of the sub nav.
-    this.subNavTriggerClass = options.subNavTriggerClass || 'subnav-trigger';
-
-    /**
-     * Determine where the window should scroll to if the option is set.
-     * @type {scrollTarget|*|string|Object}
-     */
-    this.scrollTarget = options.scrollTarget || null;
-
-    switch (this.scrollTarget) {
+    switch (settings.scrollTarget) {
       case null:
-        this.scrollTarget = this.$trigger;
+        $scrollTarget = $trigger;
         break;
 
-      case 'navContainer':
-        this.scrollTarget = this.$navContainer;
+      case 'navTop':
+        $scrollTarget = $parent;
         break;
 
       case 'trigger':
-        this.scrollTarget = this.$trigger;
+        $scrollTarget = $trigger;
         break;
 
       default:
-        this.scrollTarget = $(options.scrollTarget);
+        $scrollTarget = $(settings.scrollTarget);
         break;
     }
 
-    /**
-     * The height of the top level navigation. This
-     * shouldn't change over the lifetime of the script
-     * so it's safe to declare it globally and then initialize
-     * it on the first menu open.
-     * @type {number}
-     */
-    this.topLevelNavHeight = 0;
-
-    // Store the context of this object globally so it can
-    // be accessed within child methods.
-    var that = this;
-
     this.init = function () {
-
-      if (that.hasSubnav) {
-
+      if (settings.hasSubnav) {
+        
         // All unordered lists within the top level nav.
-        that.subLevelNav = that.topLevelNav.find('ul');
+        $subLevelNav = $topLevelNav.find('ul');
       }
 
-      that.$navContainer.addClass('responsive-nav');
+      $parent.addClass('responsive-nav');
 
       // Bind click handler
-      that.$trigger.click(function (e) {
+      $trigger.click(function (e) {
         e.preventDefault();
 
         $(this).toggleClass('active');
 
-        that.handleClick(that.$navContainer);
+        handleClick($parent);
 
       });
 
       // add Subnav stuff
-      if (that.hasSubnav && !that.subnavExpanded) {
+      if (settings.hasSubnav && !settings.subnavExpanded) {
 
-        if (!that.subNavTrigger) {
-          that.addSubNavTrigger();
+        if (!$subNavTrigger) {
+          addSubNavTrigger();
         }
 
-        that.subNavTrigger.click(function () {
-          if (that.isMobile) {
-            that.handleClick($(this).next('ul'), true);
+        $subNavTrigger.click(function () {        
+          if (isMobile) {
+            handleClick($(this).next('ul'), true);
           }
-        });
+        });    
       }
 
-      this.initDestroyOnResize();
-      that.isIntialized = true;
+      initDestroyOnResize();
+      isInitialized = true;
     };
 
-    /**
-     * Adds the trigger for the sub nav toggle and adds it as a global jquery object.
-     */
-    this.addSubNavTrigger = function() {
-      that.topLevelNav.find('ul').before('<span class="' + that.subNavTriggerClass + '"></span>');
-      that.subNavTrigger = that.topLevelNav.find('.' + that.subNavTriggerClass);
-    };
 
-    /**
-     *
-     * @param target - clicked element passed as jQuery Object
-     * @param isSubnav - boolean
-     */
-    this.handleClick = function (target, isSubnav) {
-      var subnav = isSubnav || false;
-
-      if (!target.hasClass('open')) {
-        that.openMenu(target, subnav);
-        if (that.scrollTo && !subnav) {
-          that.scrollToMenu();
-        }
-      } else {
-        that.closeMenu(target, subnav);
-      }
-    };
+    /****************************
+      Public Methods
+    *****************************/
 
     /**
      * Opens main or sub menu
      * @param targetEl - element to open
      * @param isSubnav - is this the subnav
      */
-    this.openMenu = function (targetEl, isSubnav) {
+    this.openMenu = function(targetEl, isSubnav) {
       var menuHeight;
 
       targetEl.addClass('open');
       targetEl.parent().addClass('openSub');
 
       if (isSubnav) {
-        menuHeight = that.getNavHeight(targetEl);
+        menuHeight = getNavHeight(targetEl);
+
+        if (!settings.persistantSub) {
+          // Close other sub menus
+          var currentIndex = targetEl.parent().index();
+
+          $topLevelNav.find('ul').each(function() {                                
+            if ($(this).parent().index() != currentIndex) {
+              base.closeMenu($(this), true);            
+            }
+          });
+        }
+        
       } else {
         // Get the height of the main menu.
-        menuHeight = that.getNavHeight(that.topLevelNav);
+        menuHeight = getNavHeight($topLevelNav);
 
         // add any extra spacing.
-        menuHeight += that.verticalPadding;
+        menuHeight += settings.verticalPadding;
 
         // Store the value globally.
-        that.topLevelNavHeight = menuHeight;
+        topLevelNavHeight = menuHeight;
       }
 
-      if (that.hasSubnav && that.subnavExpanded) {
-        that.topLevelNav.find('ul').each(function () {
+      if (settings.hasSubnav && settings.subnavExpanded) {
+        $topLevelNav.find('ul').each(function () {
           var subHeight;
-          subHeight = that.getNavHeight($(this));
+          subHeight = getNavHeight($(this));
           menuHeight += subHeight;
 
           setHeight($(this), subHeight);
@@ -222,7 +155,7 @@
 
       // Expand the parent nav to make space for sub.
       if (isSubnav) {
-        addHeight(that.$navContainer, menuHeight);
+        addHeight($parent, menuHeight);
       }
     };
 
@@ -238,20 +171,14 @@
       targetEl.parent().removeClass('openSub');
       targetHeight = (targetEl.height() + getMargins(targetEl));
 
-      targetEl.css({
-        'min-height': 0,
-        'max-height': 0
-      });
+      setHeight(targetEl, 0);
 
       if (isSubnav) {
-        that.$navContainer.css({
-          'min-height': "-=" + targetHeight,
-          'max-height': "-=" + targetHeight
-        });
+        removeHeight($parent, targetHeight);      
       }
 
-      if (that.hasSubnav && that.subnavExpanded) {
-        that.topLevelNav.find('ul').each(function () {
+      if (settings.hasSubnav && settings.subnavExpanded) {
+        $topLevelNav.find('ul').each(function () {
           var subHeight,
               menuItems;
 
@@ -263,26 +190,21 @@
     };
 
     this.scrollToMenu = function() {
-      var top = that.scrollTarget.offset().top - that.scrollOffset;
+      var top = $scrollTarget.offset().top - settings.scrollOffset;
       $("html, body").animate({scrollTop: top}, '300', 'swing');
     };
 
-    this.getNavHeight = function(targetEl) {
-      var height = 0;
 
-      targetEl.children('li').each(function() {
-        height = height + $(this).outerHeight();
-      });
-
-      return height;
-    };
+    /****************************
+      Private Functions
+    *****************************/
 
     /**
      * Initializes or destroys ResponsiveNav based on breakpoint.
      */
-    this.initDestroyOnResize = function () {
+    function initDestroyOnResize() {
       $(window).resize(function () {
-        that.handleResize($(this).width());
+        handleResize($(this).width());
       });
     };
 
@@ -290,19 +212,19 @@
      * Handles any functionality tied to resizing the browser.
      * @param width {number} The width of the window.
      */
-    this.handleResize = function (width) {
-      if (width <= that.breakpoint) {
-        that.isMobile = true;
-        if (!that.isIntialized) {
+    function handleResize(width) {
+      if (width <= settings.breakpoint) {
+        isMobile = true;
+        if (!isInitialized) {
 
-          that.init();
+          base.init();
         } else {
-          that.create();
+          create();
         }
       } else {
-        that.isMobile = false;
-        if (that.isIntialized) {
-          that.destroy();
+        isMobile = false;
+        if (isInitialized) {
+          destroy();
         }
       }
     };
@@ -310,90 +232,121 @@
     /**
      * Adds the necessary things to make ResponsiveNav work.
      */
-    this.create = function () {
-      that.$navContainer.addClass('responsive-nav');
+    function create() {
+      $parent.addClass('responsive-nav');
     };
 
     /**
      * Removes any ResponsiveNav specific styling.
      */
-    this.destroy = function (){
+    function destroy(){
+      setHeight($parent, '');    
 
-      that.$navContainer.css({
-        'min-height': '',
-        'max-height': ''
-      });
+      $parent.removeClass('responsive-nav');
+      $parent.removeClass('open');
 
-      that.$navContainer.removeClass('responsive-nav');
-
-      that.$navContainer.removeClass('open');
-
-      if (that.hasSubnav) {
-        that.subLevelNav.css({
-          'min-height': '',
-          'max-height': ''
-        });
-
-        that.subLevelNav.removeClass('open');
+      if (settings.hasSubnav) {
+        setHeight($subLevelNav, '');    
+        $subLevelNav.removeClass('open');
       }
-
     };
 
-    if ($(window).width() <= this.breakpoint) {
-      that.isMobile = true;
+
+    /**
+     * Adds the trigger for the sub nav toggle and adds it as a global jquery object.
+     */
+    function addSubNavTrigger() {
+      $topLevelNav.find('ul').before('<span class="' + settings.subNavTriggerClass + '"></span>');
+      $subNavTrigger = $topLevelNav.find('.' + settings.subNavTriggerClass);
+    }
+
+    /**
+     * Handles click event logic.
+     * @param target - clicked element passed as jQuery Object
+     * @param isSubnav - boolean
+     */
+    function handleClick(target, isSubnav) {
+      var subnav = isSubnav || false;
+
+      if (!target.hasClass('open')) {
+        base.openMenu(target, subnav);
+        if (settings.scrollTo && !subnav) {
+          base.scrollToMenu();
+        }
+      } else {
+        base.closeMenu(target, subnav);
+      }
+    }
+
+    function getNavHeight(targetEl) {
+      var height = 0;
+
+      targetEl.children('li').each(function() {
+        height = height + $(this).outerHeight();
+      });
+
+      return height;
+    }
+
+    /**
+     * Get the total top and bottom margin size of the passed in element.
+     * @param el
+     * @returns {number}
+     */
+    function getMargins(el) {
+      var top, bottom, total;
+      top = parseInt(el.css('marginTop').replace('px', ''));
+      bottom = parseInt(el.css('marginBottom').replace('px', ''));
+      total = top + bottom;
+
+      return total;
+    }
+
+    function setHeight(el, height) {
+      el.css({
+        'min-height': height,
+        'max-height': height
+      });
+    }
+
+    function addHeight(el, height) {
+      el.css({
+        'min-height': "+=" + height,
+        'max-height': "+=" + height
+      });
+    }
+
+    function removeHeight(el, height) {
+      el.css({
+        'min-height': "-=" + height,
+        'max-height': "-=" + height
+      });
+    }
+
+    /****************************
+      Utility Functions
+    *****************************/
+
+    /**
+     * helper function to check if variable is an object.
+     * @param variable
+     * @returns {boolean}
+     */
+    function isObj(variable) {
+      return variable !== null && typeof variable === 'object';
+    }
+
+    /****************************
+      Start
+    *****************************/
+
+    if ($(window).width() <= settings.breakpoint) {
+      isMobile = true;
       this.init();
     } else {
-      this.addSubNavTrigger();
-
-      this.initDestroyOnResize();
+      addSubNavTrigger();
+      initDestroyOnResize();
     }
+
   };
-
-  /**
-   * Get the total top and bottom margin size of the passed in element.
-   * @param el
-   * @returns {number}
-   */
-  function getMargins(el) {
-    var top, bottom, total;
-    top = parseInt(el.css('marginTop').replace('px', ''));
-    bottom = parseInt(el.css('marginBottom').replace('px', ''));
-    total = top + bottom;
-
-    return total;
-  }
-
-  function setHeight(el, height) {
-    el.css({
-      'min-height': height,
-      'max-height': height
-    });
-  }
-
-  function addHeight(el, height) {
-    el.css({
-      'min-height': "+=" + height,
-      'max-height': "+=" + height
-    });
-  }
-
-
-  /**
-   * helper function to check if variable is an object.
-   * @param variable
-   * @returns {boolean}
-   */
-  function isObj(variable) {
-    return variable !== null && typeof variable === 'object';
-  }
-
-  // Public method to open menu.
-  e3.ResponsiveNav.prototype.open = function() {
-    this.openMenu();
-  };
-
-  // Public method to close menu.
-  e3.ResponsiveNav.prototype.close = function() {
-    this.closeMenu();
-  };
-}(jq1111, e3, this, this.document);
+}(jQuery);
