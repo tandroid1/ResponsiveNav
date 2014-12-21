@@ -14,7 +14,7 @@
       breakpoint: 720,
       hasSubnav: false,
       subnavExpanded: false,
-      persistantSub: false,
+      persistentSub: false,
       verticalPadding: 0,
       scrollTo: false,
       scrollOffset: 0,
@@ -118,7 +118,7 @@
       if (isSubnav) {
         menuHeight = getNavHeight(targetEl);
 
-        if (!settings.persistantSub) {
+        if (!settings.persistentSub) {
           // Close other sub menus
           var currentIndex = targetEl.parent().index();
 
@@ -128,7 +128,7 @@
             }
           });
         }
-        
+
       } else {
         // Get the height of the main menu.
         menuHeight = getNavHeight($topLevelNav);
