@@ -14,7 +14,7 @@
       breakpoint: 720,
       hasSubnav: false,
       subnavExpanded: false,
-      persistentSub: false,
+      autoCollapse: true,
       verticalPadding: 0,
       scrollTo: false,
       scrollOffset: 0,
@@ -118,7 +118,7 @@
       if (isSubnav) {
         menuHeight = getNavHeight(targetEl);
 
-        if (!settings.persistentSub) {
+        if (settings.autoCollapse) {
           // Close other sub menus
           var currentIndex = targetEl.parent().index();
 
