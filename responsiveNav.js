@@ -57,6 +57,7 @@
 
     this.scrollOffset = options.scrollOffset || 0;
 
+    this.autoCollapse = options.autoCollapse || true;
 
     /**
      * Determines if ResponsiveNav is initialized.
@@ -196,6 +197,17 @@
 
       if (isSubnav) {
         menuHeight = that.getNavHeight(targetEl);
+
+        if (that.autoCollapse) {
+          // Close other sub menus
+          var currentIndex = targetEl.parent().index();
+
+          that.topLevelNav.find('ul').each(function() {                                
+            if ($(this).parent().index() != currentIndex) {
+              that.closeMenu($(this), true);            
+            }
+          });
+        }
       } else {
         // Get the height of the main menu.
         menuHeight = that.getNavHeight(that.topLevelNav);
@@ -204,7 +216,7 @@
         menuHeight += that.verticalPadding;
 
         // Store the value globally.
-        that.topLevelNavHeight = menuHeight;
+        that.topLevelNavHeight = menuHeight;  
       }
 
       if (that.hasSubnav && that.subnavExpanded) {
@@ -396,4 +408,4 @@
   e3.ResponsiveNav.prototype.close = function() {
     this.closeMenu();
   };
-}(jq1111, e3, this, this.document);
+}(jQuery, e3, this, this.document);
