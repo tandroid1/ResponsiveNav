@@ -2,7 +2,7 @@
  * Created by tannerlangley on 10/27/14.
  */
 
-;!function ($) {
+!function ($) {
 
   "use strict";
 
