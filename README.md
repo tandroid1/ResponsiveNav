@@ -34,7 +34,8 @@ $("#primary-nav").responsiveNav({
   trigger: '#primary-nav-trigger',
   breakpoint: 720,
   hasSubnav: true,
-  subNavTriggerClass: 'subNavTrigger'
+  subNavTriggerClass: 'subNavTrigger',
+  addSection: '.social-buttons'
 });
 ```
 
@@ -48,6 +49,7 @@ $("#primary-nav").responsiveNav({
 - `subNavTriggerClass` - Specify a class for the sub-nav trigger. Default `subnav-trigger`.
 - `autoCollapse` - If true, all sub-navs will be closed when a new one is opened. Default: `true`.
 - `subnavExpanded` - Determines if the sub-level navigation should be expanded when the top level trigger is clicked. Default: `false`.
+- `addSection` - Add an additional html element to open/close when the main trigger is clicked. Argument should be a string in the form of a css selector.
 - `verticalPadding` - Adds extra spacing to the bottom of the nav. Default: `0`.
 - `scrollTo` - Specifies if the window should scroll to the top of the expanded navigation. Default: `false`.
 - `scrollTarget` - Determines where the window should scroll to if the `scrollTo` option is set. The argument can be a jQuery object, `"trigger"` or `"navContainer"`. Default: `"trigger"`.
