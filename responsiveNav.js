@@ -25,15 +25,15 @@
 
     // Initialize all local variables
     var base = this,
-        isInitialized = false,
-        isMobile = false,
-        $trigger = '',
-        $topLevelNav = '',
-        $subLevelNav = '',
-        $subNavTrigger = '',
-        topLevelNavHeight = '',
-        $additionalSections = '',
-        $scrollTarget = '';
+      isInitialized = false,
+      isMobile = false,
+      $trigger = '',
+      $topLevelNav = '',
+      $subLevelNav = '',
+      $subNavTrigger = '',
+      topLevelNavHeight = '',
+      $additionalSections = '',
+      $scrollTarget = '';
 
     var addedSections = settings.addSection.length > 0;
 
