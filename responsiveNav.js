@@ -1,8 +1,8 @@
 /**
- * Created by tannerlangley on 10/27/14.
+ * Created by tannerlangley.
  */
 
-;!function ($) {
+!function ($) {
 
   "use strict";
 
@@ -19,12 +19,12 @@
       scrollTo: false,
       scrollOffset: 0,
       scrollTarget: null,
-      subNavTriggerClass: 'subnav-trigger'
+      subNavTriggerClass: 'subnav-trigger',
+      addSection: ''
     }, options);
-   
+
     // Initialize all local variables
     var base = this,
-        $parent = $(this),
         isInitialized = false,
         isMobile = false,
         $trigger = '',
@@ -32,16 +32,27 @@
         $subLevelNav = '',
         $subNavTrigger = '',
         topLevelNavHeight = '',
+        $additionalSections = '',
         $scrollTarget = '';
 
-    // Make trigger a jQuery object if it isn't already.
+    var addedSections = settings.addSection.length > 0;
+
+    if (!settings.hasOwnProperty('trigger')) {
+
+      // create a default trigger.
+      settings.trigger = $('<a href="#" id="default-trigger">Menu</a>');
+
+      this.before(settings.trigger);
+    }
+
+    // Make the trigger a jQuery object if it isn't already.
     $trigger = isObj(settings.trigger) ? settings.trigger : $(settings.trigger);
 
     // The unordered list in topmost level.
-    if ($parent.is("ul")) {
-      $topLevelNav = $parent;
+    if (base.is("ul")) {
+      $topLevelNav = base;
     } else {
-      $topLevelNav = $parent.find('ul').not('.contextual-links').first();
+      $topLevelNav = base.find('ul').not('.contextual-links').first();
     }
 
     switch (settings.scrollTarget) {
@@ -50,7 +61,7 @@
         break;
 
       case 'navTop':
-        $scrollTarget = $parent;
+        $scrollTarget = base;
         break;
 
       case 'trigger':
@@ -64,12 +75,21 @@
 
     this.init = function () {
       if (settings.hasSubnav) {
-        
+
         // All unordered lists within the top level nav.
         $subLevelNav = $topLevelNav.find('ul');
       }
 
-      $parent.addClass('responsive-nav');
+      base.addClass('responsive-nav');
+
+      if (addedSections) {
+        $(settings.addSection).each(function() {
+          $(this).wrap('<div class="added-section" />');
+        });
+
+        $additionalSections = $('.added-section');
+      }
+
 
       // Bind click handler
       $trigger.click(function (e) {
@@ -77,8 +97,7 @@
 
         $(this).toggleClass('active');
 
-        handleClick($parent);
-
+        handleClick(base);
       });
 
       // add Subnav stuff
@@ -88,11 +107,11 @@
           addSubNavTrigger();
         }
 
-        $subNavTrigger.click(function () {        
+        $subNavTrigger.click(function () {
           if (isMobile) {
             handleClick($(this).next('ul'), true);
           }
-        });    
+        });
       }
 
       initDestroyOnResize();
@@ -101,8 +120,8 @@
 
 
     /****************************
-      Public Methods
-    *****************************/
+     Public Methods
+     *****************************/
 
     /**
      * Opens main or sub menu
@@ -122,9 +141,9 @@
           // Close other sub menus
           var currentIndex = targetEl.parent().index();
 
-          $topLevelNav.find('ul').each(function() {                                
+          $topLevelNav.find('ul').each(function() {
             if ($(this).parent().index() != currentIndex) {
-              base.closeMenu($(this), true);            
+              base.closeMenu($(this), true);
             }
           });
         }
@@ -150,12 +169,18 @@
         });
       }
 
+      if (addedSections && !isSubnav) {
+        $additionalSections.each(function() {
+          setHeight($(this), $(this).children().outerHeight());
+        });
+      }
+
       //Expand the target menu.
       setHeight(targetEl, menuHeight);
 
       // Expand the parent nav to make space for sub.
       if (isSubnav) {
-        addHeight($parent, menuHeight);
+        addHeight(base, menuHeight);
       }
     };
 
@@ -174,19 +199,26 @@
       setHeight(targetEl, 0);
 
       if (isSubnav) {
-        removeHeight($parent, targetHeight);      
+        removeHeight(base, targetHeight);
       }
 
       if (settings.hasSubnav && settings.subnavExpanded) {
         $topLevelNav.find('ul').each(function () {
           var subHeight,
-              menuItems;
+            menuItems;
 
           menuItems = $(this).find('li');
 
           setHeight($(this), 0);
         });
       }
+
+      if (addedSections && !isSubnav) {
+        $additionalSections.each(function() {
+          setHeight($(this), 0);
+        });
+      }
+
     };
 
     this.scrollToMenu = function() {
@@ -196,8 +228,8 @@
 
 
     /****************************
-      Private Functions
-    *****************************/
+     Private Functions
+     *****************************/
 
     /**
      * Initializes or destroys ResponsiveNav based on breakpoint.
@@ -206,7 +238,7 @@
       $(window).resize(function () {
         handleResize($(this).width());
       });
-    };
+    }
 
     /**
      * Handles any functionality tied to resizing the browser.
@@ -227,29 +259,44 @@
           destroy();
         }
       }
-    };
+    }
 
     /**
      * Adds the necessary things to make ResponsiveNav work.
      */
     function create() {
-      $parent.addClass('responsive-nav');
-    };
+      base.addClass('responsive-nav');
+
+      if (addedSections) {
+        $additionalSections.each(function() {
+          $(this).addClass('added-section');
+        });
+      }
+    }
 
     /**
      * Removes any ResponsiveNav specific styling.
      */
     function destroy(){
-      setHeight($parent, '');    
+      setHeight(base, '');
 
-      $parent.removeClass('responsive-nav');
-      $parent.removeClass('open');
+      base.removeClass('responsive-nav');
+      base.removeClass('open');
+      $trigger.removeClass('active');
+
 
       if (settings.hasSubnav) {
-        setHeight($subLevelNav, '');    
+        setHeight($subLevelNav, '');
         $subLevelNav.removeClass('open');
       }
-    };
+
+      if (addedSections) {
+        $additionalSections.each(function() {
+          $(this).removeClass('added-section');
+        });
+      }
+
+    }
 
 
     /**
@@ -304,28 +351,28 @@
 
     function setHeight(el, height) {
       el.css({
-        'min-height': height,
-        'max-height': height
+        'minHeight': height,
+        'maxHeight': height
       });
     }
 
     function addHeight(el, height) {
       el.css({
-        'min-height': "+=" + height,
-        'max-height': "+=" + height
+        'minHeight': "+=" + height,
+        'maxHeight': "+=" + height
       });
     }
 
     function removeHeight(el, height) {
       el.css({
-        'min-height': "-=" + height,
-        'max-height': "-=" + height
+        'minHeight': "-=" + height,
+        'maxHeight': "-=" + height
       });
     }
 
     /****************************
-      Utility Functions
-    *****************************/
+     Utility Functions
+     *****************************/
 
     /**
      * helper function to check if variable is an object.
@@ -337,8 +384,8 @@
     }
 
     /****************************
-      Start
-    *****************************/
+     Start
+     *****************************/
 
     if ($(window).width() <= settings.breakpoint) {
       isMobile = true;
@@ -347,6 +394,6 @@
       addSubNavTrigger();
       initDestroyOnResize();
     }
-
+    return this;
   };
 }(jQuery);
