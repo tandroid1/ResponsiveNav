@@ -129,7 +129,8 @@
      * @param isSubnav - is this the subnav
      */
     this.openMenu = function(targetEl, isSubnav) {
-      var menuHeight;
+      var menuHeight,
+          lastSubHeight = 0;
 
       targetEl.addClass('open');
       targetEl.parent().addClass('openSub');
@@ -142,8 +143,10 @@
           var currentIndex = targetEl.parent().index();
 
           $topLevelNav.find('ul').each(function() {
-            if ($(this).parent().index() != currentIndex) {
-              base.closeMenu($(this), true);
+            if ($(this).parent().index() != currentIndex && $(this).height() > 0) {
+              lastSubHeight = $(this).height();
+
+              simpleClose($(this));
             }
           });
         }
@@ -180,7 +183,8 @@
 
       // Expand the parent nav to make space for sub.
       if (isSubnav) {
-        addHeight(base, menuHeight);
+        var currentHeight = base.height();
+        setHeight(base, currentHeight + menuHeight - lastSubHeight);
       }
     };
 
@@ -194,8 +198,7 @@
 
       targetEl.removeClass('open');
       targetEl.parent().removeClass('openSub');
-      targetHeight = (targetEl.height() + getMargins(targetEl));
-
+      targetHeight = (targetEl.outerHeight());
       setHeight(targetEl, 0);
 
       if (isSubnav) {
@@ -361,6 +364,7 @@
         'minHeight': "+=" + height,
         'maxHeight': "+=" + height
       });
+
     }
 
     function removeHeight(el, height) {
@@ -368,6 +372,17 @@
         'minHeight': "-=" + height,
         'maxHeight': "-=" + height
       });
+    }
+
+    /**
+     * A very stripped down version of the close method.
+     * @param el
+     */
+    function simpleClose(el) {
+
+      el.removeClass('open');
+      el.parent().removeClass('openSub');
+      setHeight(el, 0);
     }
 
     /****************************
