@@ -1,5 +1,5 @@
 /**
- * Created by tannerlangley.
+ * ResponsiveNav jQuery plugin.
  */
 
 !function ($) {
