@@ -12,6 +12,7 @@
     var settings = $.extend({
       transition: 250,
       breakpoint: 720,
+      responsive: true,
       hasSubnav: false,
       subnavExpanded: false,
       autoCollapse: true,
@@ -36,6 +37,7 @@
       $scrollTarget = '';
 
     var addedSections = settings.addSection.length > 0;
+    $additionalSections = getSections(); 
 
     if (!settings.hasOwnProperty('trigger')) {
 
@@ -83,13 +85,8 @@
       base.addClass('responsive-nav');
 
       if (addedSections) {
-        $(settings.addSection).each(function() {
-          $(this).wrap('<div class="added-section" />');
-        });
-
-        $additionalSections = $('.added-section');
+        wrapSections();
       }
-
 
       // Bind click handler
       $trigger.click(function (e) {
@@ -130,7 +127,7 @@
      */
     this.openMenu = function(targetEl, isSubnav) {
       var menuHeight,
-          lastSubHeight = 0;
+        lastSubHeight = 0;
 
       targetEl.addClass('open');
       targetEl.parent().addClass('openSub');
@@ -229,10 +226,56 @@
       $("html, body").animate({scrollTop: top}, '300', 'swing');
     };
 
+    /**
+     * Adds the necessary things to make ResponsiveNav work.
+     */
+    this.create = function() {
+      base.addClass('responsive-nav');
+      $additionalSections.each(function() {
+        $(this).addClass('added-section');
+      });
+    }
+
+    /**
+     * Removes any ResponsiveNav specific styling.
+     */
+    this.destroy = function(){
+      setHeight(base, '');
+
+      base.removeClass('responsive-nav');
+      base.removeClass('open');
+      $trigger.removeClass('active');
+
+
+      if (settings.hasSubnav) {
+        setHeight($subLevelNav, '');
+        $subLevelNav.removeClass('open');
+      }
+
+      if (addedSections) {
+        $additionalSections.each(function() {
+          setHeight($(this), '');
+          $(this).removeClass('added-section')
+        });
+      }
+
+    }
+
 
     /****************************
      Private Functions
      *****************************/
+
+    /**
+     * Wrap all added sections with a div.
+     */
+    function wrapSections() {
+      $(settings.addSection).each(function() {
+        $(this).wrap('<div class="responsive-nav-section added-section" />');
+      });
+
+      $additionalSections = $('.added-section');
+    }
 
     /**
      * Initializes or destroys ResponsiveNav based on breakpoint.
@@ -251,56 +294,17 @@
       if (width <= settings.breakpoint) {
         isMobile = true;
         if (!isInitialized) {
-
           base.init();
         } else {
-          create();
+          base.create();
         }
       } else {
         isMobile = false;
         if (isInitialized) {
-          destroy();
+          base.destroy();
         }
       }
     }
-
-    /**
-     * Adds the necessary things to make ResponsiveNav work.
-     */
-    function create() {
-      base.addClass('responsive-nav');
-
-      if (addedSections) {
-        $additionalSections.each(function() {
-          $(this).addClass('added-section');
-        });
-      }
-    }
-
-    /**
-     * Removes any ResponsiveNav specific styling.
-     */
-    function destroy(){
-      setHeight(base, '');
-
-      base.removeClass('responsive-nav');
-      base.removeClass('open');
-      $trigger.removeClass('active');
-
-
-      if (settings.hasSubnav) {
-        setHeight($subLevelNav, '');
-        $subLevelNav.removeClass('open');
-      }
-
-      if (addedSections) {
-        $additionalSections.each(function() {
-          $(this).removeClass('added-section');
-        });
-      }
-
-    }
-
 
     /**
      * Adds the trigger for the sub nav toggle and adds it as a global jquery object.
@@ -398,16 +402,35 @@
       return variable !== null && typeof variable === 'object';
     }
 
+    function getSections() {
+      if ($.isArray(settings.addSection)) {
+        var $selection = $(settings.addSection[0]);
+        
+        $.each(settings.addSection, function(i, val) {
+          if (i > 0) {
+            $selection = $selection.add(val);      
+          }
+        });
+
+        return $selection;
+      } else {
+         return $(settings.addSection);
+      }
+    }
+
     /****************************
      Start
      *****************************/
 
+    this.init();
+
     if ($(window).width() <= settings.breakpoint) {
       isMobile = true;
-      this.init();
     } else {
       addSubNavTrigger();
-      initDestroyOnResize();
+      if (settings.responsive) {
+        initDestroyOnResize();
+      }
     }
     return this;
   };

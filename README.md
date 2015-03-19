@@ -45,6 +45,7 @@ $("#primary-nav").responsiveNav({
 - `navContainer` - Container for collapsible menu. This can be a wrapper around an unordered list or the unordered list itself in the form of a css selector or jQuery object.
 - `transition` - The duration of the open/close transition in milliseconds. Default: `250`.
 - `breakpoint` - Min-width where the nav should no longer collapse. Default: `720`.
+- `responsive` - Determines if the menu should automatically create and destroy on resize. Default: `true`.
 - `hasSubnav` - Determines if there is a sub-level navigation. Default: `false`.
 - `subNavTriggerClass` - Specify a class for the sub-nav trigger. Default `subnav-trigger`.
 - `autoCollapse` - If true, all sub-navs will be closed when a new one is opened. Default: `true`.
@@ -55,4 +56,28 @@ $("#primary-nav").responsiveNav({
 - `scrollTarget` - Determines where the window should scroll to if the `scrollTo` option is set. The argument can be a jQuery object, `"trigger"` or `"navContainer"`. Default: `"trigger"`.
 - `scrollOffset` - Specifies an offset from the top of the scrolled to element. Default: `0`.
 
+## Methods 
 
+### create()
+
+Adds the necessary classes and wrappers for responsiveNav to work. This method is called automatically when the browser is resized if `responsive` is set to true.
+
+#### Example:
+
+```javascript
+$(".myButton").on("myCustomEvent", function() {
+  $(".primary-nav").create();
+});
+```
+
+### destroy()
+
+Removes responsiveNav functionality. This method is called automatically when the browser is resized if `responsive` is set to true.
+
+#### Example:
+
+```javascript
+$(".myButton").on("myCustomEvent", function() {
+  $(".primary-nav").destroy();
+});
+```
