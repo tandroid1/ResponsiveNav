@@ -82,7 +82,9 @@
         $subLevelNav = $topLevelNav.find('ul');
       }
 
-      base.addClass('responsive-nav');
+      if (isMobile) {
+        base.addClass('responsive-nav');
+      }
 
       if (addedSections) {
         wrapSections();
